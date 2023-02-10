@@ -20,7 +20,7 @@ public class TestsController : ControllerBase
             id = Guid.NewGuid().ToString(),
             Created = DateTime.UtcNow,
             Updated = DateTime.UtcNow,
-            Subject = request.Subject,
+            Title = request.Title,
             TestDate = DateTime.UtcNow
         };
         
@@ -29,7 +29,7 @@ public class TestsController : ControllerBase
         return new TestsResponse()
         {
             id = test.id,
-            Subject = test.Subject,
+            Title = test.Title,
             TestDate = test.TestDate
         };
         
@@ -42,7 +42,7 @@ public class TestsController : ControllerBase
             test => new TestsResponse
             {
                 id = test.id,
-                Subject = test.Subject,
+                Title = test.Title,
                 TestDate = test.TestDate
             }
         ).ToList();
@@ -57,7 +57,7 @@ public class TestsController : ControllerBase
         return new TestsResponse
         {
             id = test.id,
-            Subject = test.Subject,
+            Title = test.Title,
             TestDate = test.TestDate
         };
     }
@@ -80,13 +80,13 @@ public class TestsController : ControllerBase
         if (test is null) return null;
         
         test.Updated = DateTime.UtcNow;
-        test.Subject = request.Subject;
+        test.Title = request.Title;
         test.TestDate = request.TestDate; 
         
         return new TestsResponse()
         {
             id = test.id,
-            Subject = test.Subject,
+            Title = test.Title,
             TestDate = test.TestDate,
         };
     }

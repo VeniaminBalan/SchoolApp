@@ -1,10 +1,12 @@
-﻿namespace SchoolApp.Features.Assignments.Views;
+﻿using SchoolApp.Features.Assignments.Models;
+
+namespace SchoolApp.Features.Assignments.Views;
 
 public class AssignmentsResponse
 {
     public string id { get; set; }
     
-    public string Subject { get; set; }
+    public SubjectModel Subject { get; set; }
     
     public string Description { get; set; }
     

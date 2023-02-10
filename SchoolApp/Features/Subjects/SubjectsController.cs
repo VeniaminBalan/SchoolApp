@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SchoolApp.Database;
 using SchoolApp.Features.Assignments.Models;
+using SchoolApp.Features.Assignments.Views;
 using SchoolApp.Features.Subjects.View;
+using SchoolApp.Features.Test.Views;
 
 namespace SchoolApp.Features.Subjects;
 
@@ -8,12 +12,16 @@ namespace SchoolApp.Features.Subjects;
 [Route("subjects")]
 public class SubjectsController : ControllerBase
 {
-    private static List<SubjectModel> _mockDB = new List<SubjectModel>();
+    //private static List<SubjectModel> _mockDB = new List<SubjectModel>();
+    private readonly AppDbContext _appDbContext;
 
-    public SubjectsController() {}
+    public SubjectsController(AppDbContext appDbContext)
+    {
+        _appDbContext = appDbContext;
+    }
     
     [HttpPost]
-    public SubjectResponse Add(SubjectRequest request)
+    public async Task<ActionResult<SubjectResponse>> Add(SubjectRequest request)
     {
         var subject = new SubjectModel
         {
@@ -22,10 +30,13 @@ public class SubjectsController : ControllerBase
             Updated = DateTime.UtcNow,
             Name = request.Name,
             ProffesorMail = request.ProffesorMail,
-            Grades = request.Grades
+            //Grades = request.Grades
         };
         
-        _mockDB.Add(subject);
+        //_mockDB.Add(subject);
+        subject = (await _appDbContext.Subjects.AddAsync(subject)).Entity;
+        await _appDbContext.SaveChangesAsync();
+        
         return new SubjectResponse
         {
             id = subject.id,
@@ -35,20 +46,40 @@ public class SubjectsController : ControllerBase
         };
         
     }
-    
+
     [HttpGet]
-    public IEnumerable<SubjectResponse> Get()
+    public async Task<ActionResult<IEnumerable<SubjectResponse>>> Get()
     {
-        return _mockDB.Select(
+        var subjects = await _appDbContext.Subjects.Include(x =>x.Tests).Include(y=>y.Assignments).Select(
             subject => new SubjectResponse
             {
                 id = subject.id,
                 Name = subject.Name,
                 ProffesorMail = subject.ProffesorMail,
-                Grades = subject.Grades
-            }).ToList();
+                Grades = subject.Grades,
+                Assignment = subject.Assignments.Select(
+                    assignment => new AssignmentsResponseForSubject
+                    {
+                        DeadLine = assignment.DeadLine,
+                        Description = assignment.Description,
+                        id = assignment.id,
+                        
+                    }
+                    ),
+                Tests = subject.Tests.Select(
+                    test => new TestsResponse
+                    {
+                        id = test.id,
+                        TestDate = test.TestDate,
+                        Title = test.Title
+                    }
+                    )
+            }).ToListAsync();
+
+        return Ok(subjects);
+
     }
-    
+    /*
     [HttpGet("{id}")]
     public SubjectResponse Get([FromRoute] string id)
     {
@@ -84,7 +115,7 @@ public class SubjectsController : ControllerBase
         subject.Updated = DateTime.UtcNow;
         subject.Name = request.Name;
         subject.ProffesorMail = request.ProffesorMail;
-        subject.Grades = request.Grades;
+        //subject.Grades = request.Grades;
         
         return new SubjectResponse()
         {
@@ -94,5 +125,5 @@ public class SubjectsController : ControllerBase
             Grades = subject.Grades,
         };
     }
-    
+    */
 }

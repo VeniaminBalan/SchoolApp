@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SchoolApp.Base;
 
 namespace SchoolApp.Features.Subjects.View;
 
@@ -9,5 +10,4 @@ public class SubjectRequest
     [EmailAddress]
     [Required]
     public string ProffesorMail { get; set; }
-    [Required]public IEnumerable<Double> Grades { get; set; }
 }
