@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolApp.Database;
 using SchoolApp.Features.Assignments.Models;
 using SchoolApp.Features.Assignments.Views;
+using SchoolApp.Features.Subjects.View;
 
 namespace SchoolApp.Features.Assignments;
 
@@ -54,10 +55,14 @@ public class AssignmentsController : ControllerBase
             assignment => new AssignmentsResponse
             {
                 id = assignment.id,
-                Subject = assignment.Subject,
                 Description = assignment.Description,
                 DeadLine = assignment.DeadLine,
-
+                Subject = new SubjectResponseForAssignment
+                {
+                    id = assignment.Subject.id,
+                    Name = assignment.Subject.Name,
+                    ProffesorMail = assignment.Subject.ProffesorMail
+                }
             }).ToListAsync();
 
         return Ok(assignments);
@@ -68,13 +73,21 @@ public class AssignmentsController : ControllerBase
     {
         var assignment = await _appDbContext.Assignments.FirstOrDefaultAsync(x => id == x.id);
         if (assignment is null) return NotFound("Assignment does not exist");
-        return new AssignmentsResponse
+        
+        var res = new AssignmentsResponse
         {
             id = assignment.id,
-            Subject = assignment.Subject,
             Description = assignment.Description,
-            DeadLine = assignment.DeadLine
+            DeadLine = assignment.DeadLine,
+            /*Subject = new SubjectResponseForAssignment
+            {
+                id = assignment.Subject.id,
+                Name = assignment.Subject.Name,
+                ProffesorMail = assignment.Subject.ProffesorMail
+            }*/
         };
+        
+        return Ok(res);
     }
 
     [HttpPatch("{id}")]
@@ -93,7 +106,7 @@ public class AssignmentsController : ControllerBase
         return Ok(new AssignmentsResponse()
         {
             id = assignment.id,
-            Subject = assignment.Subject,
+            //Subject = assignment.Subject,
             Description = assignment.Description,
             DeadLine = assignment.DeadLine
         });
