@@ -25,8 +25,8 @@ public class TestsController : ControllerBase
             id = Guid.NewGuid().ToString(),
             Created = DateTime.UtcNow,
             Updated = DateTime.UtcNow,
-            Title = request.Title,
-            TestDate = DateTime.UtcNow
+            Description = request.Description,
+           Grade = request.Grade
         };
         
         _mockDB.Add(test);
@@ -34,8 +34,8 @@ public class TestsController : ControllerBase
         return new TestsResponse()
         {
             id = test.id,
-            Title = test.Title,
-            TestDate = test.TestDate
+            Description = test.Description,
+            Grade = test.Grade
         };
         
     }
@@ -47,8 +47,8 @@ public class TestsController : ControllerBase
             test => new TestsResponse
             {
                 id = test.id,
-                Title = test.Title,
-                TestDate = test.TestDate
+                Description = test.Description,
+                Grade = test.Grade
             }
         ).ToList();
     }
@@ -62,8 +62,8 @@ public class TestsController : ControllerBase
         return new TestsResponse
         {
             id = test.id,
-            Title = test.Title,
-            TestDate = test.TestDate
+            Description = test.Description,
+            Grade = test.Grade
         };
     }
     
@@ -85,14 +85,14 @@ public class TestsController : ControllerBase
         if (test is null) return null;
         
         test.Updated = DateTime.UtcNow;
-        test.Title = request.Title;
-        test.TestDate = request.TestDate; 
+        test.Description = request.Description;
+        test.Grade = request.Grade; 
         
         return new TestsResponse()
         {
             id = test.id,
-            Title = test.Title,
-            TestDate = test.TestDate,
+            Description = test.Description,
+            Grade = test.Grade
         };
     }
 }

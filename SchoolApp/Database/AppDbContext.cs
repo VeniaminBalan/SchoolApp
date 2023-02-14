@@ -10,11 +10,5 @@ public class AppDbContext : DbContext
     public DbSet<AssignmentModel> Assignments { get; set;}
     public DbSet<SubjectModel> Subjects { get; set;}
     public DbSet<TestModel> Tests { get; set;}
-
-    /*protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<AssignmentModel>()
-            .HasOne(s=>s.Subject)
-            .WithOne()
-    }*/
+    
 }

@@ -57,6 +57,7 @@ public class AssignmentsController : ControllerBase
                 id = assignment.id,
                 Description = assignment.Description,
                 DeadLine = assignment.DeadLine,
+                Grade = assignment.Grade,
                 Subject = new SubjectResponseForAssignment
                 {
                     id = assignment.Subject.id,
@@ -79,6 +80,7 @@ public class AssignmentsController : ControllerBase
             id = assignment.id,
             Description = assignment.Description,
             DeadLine = assignment.DeadLine,
+            Grade = assignment.Grade,
             Subject = new SubjectResponseForAssignment
             {
                 id = assignment.Subject.id,
@@ -99,6 +101,7 @@ public class AssignmentsController : ControllerBase
         assignment.Updated = DateTime.UtcNow;
         assignment.Description = request.Description;
         assignment.DeadLine = request.DeadLine;
+        assignment.Grade = request.Grade;
 
         await _appDbContext.SaveChangesAsync();
         
@@ -107,6 +110,7 @@ public class AssignmentsController : ControllerBase
             id = assignment.id,
             Description = assignment.Description,
             DeadLine = assignment.DeadLine,
+            Grade = assignment.Grade,
             Subject = new SubjectResponseForAssignment
                 {
                     id = assignment.Subject.id,

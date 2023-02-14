@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolApp.Database;
 using SchoolApp.Features.Assignments.Models;
@@ -12,7 +13,6 @@ namespace SchoolApp.Features.Subjects;
 [Route("subjects")]
 public class SubjectsController : ControllerBase
 {
-    //private static List<SubjectModel> _mockDB = new List<SubjectModel>();
     private readonly AppDbContext _appDbContext;
 
     public SubjectsController(AppDbContext appDbContext)
@@ -30,10 +30,8 @@ public class SubjectsController : ControllerBase
             Updated = DateTime.UtcNow,
             Name = request.Name,
             ProffesorMail = request.ProffesorMail,
-            //Grades = request.Grades
         };
         
-        //_mockDB.Add(subject);
         subject = (await _appDbContext.Subjects.AddAsync(subject)).Entity;
         await _appDbContext.SaveChangesAsync();
         
@@ -42,7 +40,6 @@ public class SubjectsController : ControllerBase
             id = subject.id,
             Name = subject.Name,
             ProffesorMail = subject.ProffesorMail,
-            Grades = subject.Grades
         };
         
     }
@@ -50,30 +47,31 @@ public class SubjectsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SubjectResponse>>> Get()
     {
-        var subjects = await _appDbContext.Subjects.Include(x =>x.Tests).Include(y=>y.Assignments).Select(
+        var subjects = await _appDbContext.Subjects
+            .Include(x =>x.Tests)
+            .Include(y=>y.Assignments)
+            .Select(
             subject => new SubjectResponse
             {
                 id = subject.id,
                 Name = subject.Name,
                 ProffesorMail = subject.ProffesorMail,
-                Grades = subject.Grades,
+                //Grades = subject.Assignments.Select(s => s.id == subject.id)
                 Assignment = subject.Assignments.Select(
                     assignment => new AssignmentsResponseForSubject
                     {
                         DeadLine = assignment.DeadLine,
                         Description = assignment.Description,
                         id = assignment.id,
-                        
-                    }
-                    ),
+                        Grade = assignment.Grade
+                    }),
                 Tests = subject.Tests.Select(
                     test => new TestsResponse
                     {
                         id = test.id,
-                        TestDate = test.TestDate,
-                        Title = test.Title
-                    }
-                    )
+                        Description = test.Description,
+                        Grade = test.Grade
+                    })
             }).ToListAsync();
 
         return Ok(subjects);

@@ -4,9 +4,9 @@ namespace SchoolApp.Features.Assignments.Models;
 
 public class TestModel : Model
 {
-    public string Title { get; set; }
+    public string Description { get; set; }
 
-    public DateTime TestDate { get; set; }
+    public SubjectModel Subject { get; set; }
     
-    public List<SubjectModel> Subjects { get; set; }
+    public decimal Grade { get; set; }
 }
