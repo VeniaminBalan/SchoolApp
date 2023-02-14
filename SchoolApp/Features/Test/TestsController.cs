@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SchoolApp.Database;
 using SchoolApp.Features.Assignments.Models;
 using SchoolApp.Features.Test.Views;
 
@@ -9,8 +10,12 @@ namespace SchoolApp.Features.Test;
 public class TestsController : ControllerBase
 {
     private static List<TestModel> _mockDB = new List<TestModel>();
+    private readonly AppDbContext _appDbContext;
 
-    public TestsController() {}
+    public TestsController(AppDbContext appDbContext)
+    {
+        _appDbContext = appDbContext;
+    }
     
     [HttpPost]
     public TestsResponse Add(TestsRequest request)

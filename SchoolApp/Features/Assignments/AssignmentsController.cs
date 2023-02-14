@@ -71,7 +71,7 @@ public class AssignmentsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<AssignmentsResponse>>  Get([FromRoute] string id)
     {
-        var assignment = await _appDbContext.Assignments.FirstOrDefaultAsync(x => id == x.id);
+        var assignment = await _appDbContext.Assignments.Include(x => x.Subject).FirstOrDefaultAsync(x => id == x.id);
         if (assignment is null) return NotFound("Assignment does not exist");
         
         var res = new AssignmentsResponse
@@ -79,12 +79,12 @@ public class AssignmentsController : ControllerBase
             id = assignment.id,
             Description = assignment.Description,
             DeadLine = assignment.DeadLine,
-            /*Subject = new SubjectResponseForAssignment
+            Subject = new SubjectResponseForAssignment
             {
                 id = assignment.Subject.id,
                 Name = assignment.Subject.Name,
                 ProffesorMail = assignment.Subject.ProffesorMail
-            }*/
+            }
         };
         
         return Ok(res);
@@ -93,11 +93,10 @@ public class AssignmentsController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<ActionResult<AssignmentsResponse>>  Patch([FromRoute] string id,AssignmentsRequest request)
     {
-        var assignment = await _appDbContext.Assignments.FirstOrDefaultAsync(x => x.id == id);
+        var assignment = await _appDbContext.Assignments.Include(x => x.Subject).FirstOrDefaultAsync(x => x.id == id);
         if (assignment is null) return NotFound("Assignment does not exist");
         
         assignment.Updated = DateTime.UtcNow;
-        //assignment.Subject = null,
         assignment.Description = request.Description;
         assignment.DeadLine = request.DeadLine;
 
@@ -106,52 +105,17 @@ public class AssignmentsController : ControllerBase
         return Ok(new AssignmentsResponse()
         {
             id = assignment.id,
-            //Subject = assignment.Subject,
             Description = assignment.Description,
-            DeadLine = assignment.DeadLine
+            DeadLine = assignment.DeadLine,
+            Subject = new SubjectResponseForAssignment
+                {
+                    id = assignment.Subject.id,
+                    Name = assignment.Subject.Name,
+                    ProffesorMail = assignment.Subject.ProffesorMail
+                },
         });
     }
     
-    /*[HttpPatch("{id}")]
-    public AssignmentsResponse Patch([FromRoute] string id, [FromBody] JsonPatchDocument<AssignmentModel> patch )
-    {
-        var fromDb = _mockDB.FirstOrDefault(x => x.id == id);
-        
-        if (fromDb is null) return null;
-
-        var original = new AssignmentModel
-        {
-            id= fromDb.id,
-            Created = fromDb.Created,
-            Updated = fromDb.Updated,
-            Subject= fromDb.Subject,
-            Description=  fromDb.Description,
-            DeadLine = fromDb.DeadLine
-        };
-        
-        patch.ApplyTo(fromDb, ModelState);
-        
-        var isValid = TryValidateModel(fromDb);
-        
-        if(!isValid)
-        {
-            return null;
-        }
-        
-        fromDb.Updated = DateTime.UtcNow;
-        fromDb.Subject = original.Subject;
-        fromDb.Description = original.Description;
-        fromDb.DeadLine = original.DeadLine;
-        
-        return new AssignmentsResponse()
-        {
-            id = fromDb.id,
-            Subject = fromDb.Subject,
-            Description = fromDb.Description,
-            DeadLine = fromDb.DeadLine
-        };
-    }*/
-
     [HttpDelete("{id}")]
     public async Task<ActionResult<AssignmentsResponse>> Delete([FromRoute] string id)
     {
