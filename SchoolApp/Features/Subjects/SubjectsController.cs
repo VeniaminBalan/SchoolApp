@@ -96,6 +96,121 @@ public class SubjectsController : ControllerBase
 
     }
     
+    [HttpGet("{id}")]
+    public async Task<ActionResult<SubjectResponse>> Get([FromRoute] string id)
+    {
+        var subject = await _appDbContext.Subjects
+            .Include(t => t.Tests)
+            .Include(a => a.Assignments)
+            .FirstOrDefaultAsync(s => s.id == id);
+        
+        if (subject is null) return NotFound("subject does not exist");
+
+        var res = new SubjectResponse
+        {
+            id = subject.id,
+            Name = subject.Name,
+            ProffesorMail = subject.ProffesorMail,
+            Grades = new List<GradeResponse>()
+                .Concat(subject.Assignments.Select(a => 
+                        new GradeResponse
+                        {
+                            Type = View.GradeType.Assignment,
+                            Description = a.Description,
+                            Grade = a.Grade,
+                        }
+                    ).ToList()
+                )
+                .Concat(subject.Tests.Select(t => 
+                        new GradeResponse
+                        {
+                            Type = View.GradeType.Test,
+                            Description = t.Description,
+                            Grade= t.Grade,
+                        }
+                    ).ToList()
+                ),
+            Assignment = subject.Assignments.Select(
+                assignment => new AssignmentsResponseForSubject
+                {
+                    DeadLine = assignment.DeadLine,
+                    Description = assignment.Description,
+                    id = assignment.id,
+                    Grade = assignment.Grade
+                }),
+            Tests = subject.Tests.Select(
+                test => new TestResponseForSubject
+                {
+                    id = test.id,
+                    Description = test.Description,
+                    Grade = test.Grade
+                })
+        };
+
+        return Ok(res);
+    }    
+    
+    [HttpPatch("{id}")]
+    public async Task<ActionResult<SubjectResponse>> Patch([FromRoute] string id,SubjectRequest request)
+    {
+        var subject = await _appDbContext.Subjects
+            .Include(t => t.Tests)
+            .Include(a => a.Assignments)
+            .FirstOrDefaultAsync(s => s.id == id);
+        
+        if (subject is null) return NotFound("subject does not exist");
+        
+        subject.Updated = DateTime.UtcNow;
+        subject.Name = request.Name;
+        subject.ProffesorMail = request.ProffesorMail;
+        
+        await _appDbContext.SaveChangesAsync();
+
+        var res = new SubjectResponse
+        {
+            id = subject.id,
+            Name = subject.Name,
+            ProffesorMail = subject.ProffesorMail,
+            Grades = new List<GradeResponse>()
+                .Concat(subject.Assignments.Select(a => 
+                        new GradeResponse
+                        {
+                            Type = View.GradeType.Assignment,
+                            Description = a.Description,
+                            Grade = a.Grade,
+                        }
+                    ).ToList()
+                )
+                .Concat(subject.Tests.Select(t => 
+                        new GradeResponse
+                        {
+                            Type = View.GradeType.Test,
+                            Description = t.Description,
+                            Grade= t.Grade,
+                        }
+                    ).ToList()
+                ),
+            Assignment = subject.Assignments.Select(
+                assignment => new AssignmentsResponseForSubject
+                {
+                    DeadLine = assignment.DeadLine,
+                    Description = assignment.Description,
+                    id = assignment.id,
+                    Grade = assignment.Grade
+                }),
+            Tests = subject.Tests.Select(
+                test => new TestResponseForSubject
+                {
+                    id = test.id,
+                    Description = test.Description,
+                    Grade = test.Grade
+                })
+        };
+
+        return Ok(res);
+    }
+
+    
     [HttpDelete("{id}")]
     public async Task<ActionResult<SubjectResponse>> Delete([FromRoute] string id)
     {
@@ -113,39 +228,5 @@ public class SubjectsController : ControllerBase
 
         return Ok($"Object {subject.id} was deleted successfully");
     }
-    /*
-    [HttpGet("{id}")]
-    public SubjectResponse Get([FromRoute] string id)
-    {
-        var subjcet = _mockDB.FirstOrDefault(x => x.id == id);
-        if (subjcet is null) return null;
-
-        return new SubjectResponse
-        {
-            id = subjcet.id,
-            Name = subjcet.Name,
-            ProffesorMail = subjcet.ProffesorMail,
-            Grades = subjcet.Grades
-        };
-    }    
-    [HttpPatch("{id}")]
-    public SubjectResponse Patch([FromRoute] string id,SubjectRequest request)
-    {
-        var subject = _mockDB.FirstOrDefault(x => x.id == id);
-        if (subject is null) return null;
-        
-        subject.Updated = DateTime.UtcNow;
-        subject.Name = request.Name;
-        subject.ProffesorMail = request.ProffesorMail;
-        //subject.Grades = request.Grades;
-        
-        return new SubjectResponse()
-        {
-            id = subject.id,
-            Name = subject.Name,
-            ProffesorMail = subject.ProffesorMail,
-            Grades = subject.Grades,
-        };
-    }
-    */
+    
 }

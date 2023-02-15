@@ -48,7 +48,7 @@ public class TestsController : ControllerBase
                     Subject = new SubjectResponseForTest
                     {
                         id = test.Subject.id,
-                        Name = test.Subject.id,
+                        Name = test.Subject.Name,
                         ProffesorMail = test.Subject.ProffesorMail
                     }
                 }
@@ -67,7 +67,7 @@ public class TestsController : ControllerBase
                     Subject = new SubjectResponseForTest
                     {
                         id = test.Subject.id,
-                        Name = test.Subject.id,
+                        Name = test.Subject.Name,
                         ProffesorMail = test.Subject.ProffesorMail
                     }
                 }).ToListAsync();
@@ -92,7 +92,7 @@ public class TestsController : ControllerBase
             Subject = new SubjectResponseForTest
             {
                 id = test.Subject.id,
-                Name = test.Subject.id,
+                Name = test.Subject.Name,
                 ProffesorMail = test.Subject.ProffesorMail
             }
         });
@@ -116,18 +116,28 @@ public class TestsController : ControllerBase
     [HttpPatch("{id}")]
     public async Task<ActionResult<TestsResponse>> Patch([FromRoute] string id,TestsRequest request)
     {
-        var test = await _appDbContext.Tests.FirstOrDefaultAsync(t => id == t.id);
+        var test = await _appDbContext.Tests
+            .Include(x => x.Subject)
+            .FirstOrDefaultAsync(t => id == t.id);
         if (test is null) return NotFound("The test does not exist");
         
         test.Updated = DateTime.UtcNow;
         test.Description = request.Description;
         test.Grade = request.Grade;
+        
+        await _appDbContext.SaveChangesAsync();
 
         return Ok(new TestsResponse
         {
             id = test.id,
             Description = test.Description,
-            Grade = test.Grade
+            Grade = test.Grade,
+            Subject = new SubjectResponseForTest
+            {
+                id = test.Subject.id,
+                Name = test.Subject.Name,
+                ProffesorMail = test.Subject.ProffesorMail
+            }
         });
     }
 }
