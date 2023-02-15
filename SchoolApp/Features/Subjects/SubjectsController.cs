@@ -56,7 +56,25 @@ public class SubjectsController : ControllerBase
                 id = subject.id,
                 Name = subject.Name,
                 ProffesorMail = subject.ProffesorMail,
-                //Grades = subject.Assignments.Select(s => s.id == subject.id)
+                Grades = new List<GradeResponse>()
+                    .Concat(subject.Assignments.Select(a => 
+                            new GradeResponse
+                            {
+                                Type = View.GradeType.Assignment,
+                                Description = a.Description,
+                                Grade = a.Grade,
+                            }
+                        ).ToList()
+                    )
+                    .Concat(subject.Tests.Select(t => 
+                            new GradeResponse
+                            {
+                                Type = View.GradeType.Test,
+                                Description = t.Description,
+                                Grade= t.Grade,
+                            }
+                        ).ToList()
+                    ),
                 Assignment = subject.Assignments.Select(
                     assignment => new AssignmentsResponseForSubject
                     {
@@ -66,7 +84,7 @@ public class SubjectsController : ControllerBase
                         Grade = assignment.Grade
                     }),
                 Tests = subject.Tests.Select(
-                    test => new TestsResponse
+                    test => new TestResponseForSubject
                     {
                         id = test.id,
                         Description = test.Description,
@@ -76,6 +94,24 @@ public class SubjectsController : ControllerBase
 
         return Ok(subjects);
 
+    }
+    
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<SubjectResponse>> Delete([FromRoute] string id)
+    {
+        var subject = await _appDbContext.Subjects
+            .Include(x => x.Tests)
+            .Include(y => y.Assignments)
+            .FirstOrDefaultAsync(s => s.id == id);
+        if (subject is null) return NotFound("subject does not exist");
+
+        subject.Assignments.Select(a => subject.Assignments.Remove(a));
+        subject.Tests.Select(t => subject.Tests.Remove(t));
+        _appDbContext.Remove(subject);
+        
+        await _appDbContext.SaveChangesAsync();
+
+        return Ok($"Object {subject.id} was deleted successfully");
     }
     /*
     [HttpGet("{id}")]
@@ -91,19 +127,7 @@ public class SubjectsController : ControllerBase
             ProffesorMail = subjcet.ProffesorMail,
             Grades = subjcet.Grades
         };
-    }
-    
-    [HttpDelete("{id}")]
-    public IActionResult Delete([FromRoute] string id)
-    {
-        var subject = _mockDB.FirstOrDefault(x => x.id == id);
-        if (subject is null) return null;
-
-        _mockDB.Remove(subject);
-
-        return Ok($"Object {subject.id} was deleted successfully");
-    }
-    
+    }    
     [HttpPatch("{id}")]
     public SubjectResponse Patch([FromRoute] string id,SubjectRequest request)
     {

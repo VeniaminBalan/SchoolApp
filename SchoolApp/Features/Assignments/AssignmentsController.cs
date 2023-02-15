@@ -72,7 +72,9 @@ public class AssignmentsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<AssignmentsResponse>>  Get([FromRoute] string id)
     {
-        var assignment = await _appDbContext.Assignments.Include(x => x.Subject).FirstOrDefaultAsync(x => id == x.id);
+        var assignment = await _appDbContext.Assignments
+            .Include(x => x.Subject)
+            .FirstOrDefaultAsync(x => id == x.id);
         if (assignment is null) return NotFound("Assignment does not exist");
         
         var res = new AssignmentsResponse

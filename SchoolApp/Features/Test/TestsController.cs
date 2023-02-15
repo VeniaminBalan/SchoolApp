@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SchoolApp.Database;
 using SchoolApp.Features.Assignments.Models;
+using SchoolApp.Features.Subjects.View;
 using SchoolApp.Features.Test.Views;
 
 namespace SchoolApp.Features.Test;
@@ -9,7 +11,7 @@ namespace SchoolApp.Features.Test;
 [Route("tests")]
 public class TestsController : ControllerBase
 {
-    private static List<TestModel> _mockDB = new List<TestModel>();
+    //private static List<TestModel> _mockDB = new List<TestModel>();
     private readonly AppDbContext _appDbContext;
 
     public TestsController(AppDbContext appDbContext)
@@ -18,81 +20,114 @@ public class TestsController : ControllerBase
     }
     
     [HttpPost]
-    public TestsResponse Add(TestsRequest request)
+    public async Task<ActionResult<TestsResponse>> Add(string subjectName, TestsRequest request)
     {
+        var subject = await _appDbContext.Subjects
+            .FirstOrDefaultAsync(x => subjectName == x.Name);
+        if (subject is null) return NotFound("Subject does not exist");
+        
         var test = new TestModel()
         {
             id = Guid.NewGuid().ToString(),
             Created = DateTime.UtcNow,
             Updated = DateTime.UtcNow,
             Description = request.Description,
-           Grade = request.Grade
+            Grade = request.Grade,
+            Subject = subject
         };
         
-        _mockDB.Add(test);
+        test = (await _appDbContext.Tests.AddAsync(test)).Entity;
+        await _appDbContext.SaveChangesAsync();
         
-        return new TestsResponse()
-        {
-            id = test.id,
-            Description = test.Description,
-            Grade = test.Grade
-        };
-        
+        return Ok(
+                new TestsResponse()
+                {
+                    id = test.id,
+                    Description = test.Description,
+                    Grade = test.Grade,
+                    Subject = new SubjectResponseForTest
+                    {
+                        id = test.Subject.id,
+                        Name = test.Subject.id,
+                        ProffesorMail = test.Subject.ProffesorMail
+                    }
+                }
+            );
     }
 
     [HttpGet]
-    public IEnumerable<TestsResponse> Get()
+    public async Task<ActionResult<IEnumerable<TestsResponse>>> Get()
     {
-        return _mockDB.Select(
-            test => new TestsResponse
-            {
-                id = test.id,
-                Description = test.Description,
-                Grade = test.Grade
-            }
-        ).ToList();
+        var tests = await _appDbContext.Tests.Select(
+                test => new TestsResponse
+                {
+                    id = test.id,
+                    Description = test.Description,
+                    Grade = test.Grade,
+                    Subject = new SubjectResponseForTest
+                    {
+                        id = test.Subject.id,
+                        Name = test.Subject.id,
+                        ProffesorMail = test.Subject.ProffesorMail
+                    }
+                }).ToListAsync();
+
+        return Ok(tests);
     }
     
     [HttpGet("{id}")]
-    public TestsResponse Get([FromRoute] string id)
+    public async Task<ActionResult<TestsResponse>> Get([FromRoute] string id)
     {
-        var test = _mockDB.FirstOrDefault(x => x.id == id);
-        if (test is null) return null;
+        var test = await _appDbContext.Tests
+            .Include(x => x.Subject)
+            .FirstOrDefaultAsync(t => id == t.id);
+        if (test is null) return NotFound("The test does not exist");
 
-        return new TestsResponse
+
+        return Ok(new TestsResponse
         {
             id = test.id,
             Description = test.Description,
-            Grade = test.Grade
-        };
+            Grade = test.Grade,
+            Subject = new SubjectResponseForTest
+            {
+                id = test.Subject.id,
+                Name = test.Subject.id,
+                ProffesorMail = test.Subject.ProffesorMail
+            }
+        });
+
     }
     
     [HttpDelete("{id}")]
-    public IActionResult Delete([FromRoute] string id)
+    public async Task<ActionResult<TestsResponse>> Delete([FromRoute] string id)
     {
-        var test = _mockDB.FirstOrDefault(x => x.id == id);
-        if (test is null) return null;
+        var test = await _appDbContext.Tests
+            .Include(x => x.Subject)
+            .FirstOrDefaultAsync(t => id == t.id);
+        if (test is null) return NotFound("The test does not exist");
 
-        _mockDB.Remove(test);
+        _appDbContext.Remove(test);
+        await _appDbContext.SaveChangesAsync();
 
         return Ok($"Object {test.id} was deleted successfully");
     }
     
     [HttpPatch("{id}")]
-    public TestsResponse Patch([FromRoute] string id,TestsRequest request)
+    public async Task<ActionResult<TestsResponse>> Patch([FromRoute] string id,TestsRequest request)
     {
-        var test = _mockDB.FirstOrDefault(x => x.id == id);
-        if (test is null) return null;
+        var test = await _appDbContext.Tests.FirstOrDefaultAsync(t => id == t.id);
+        if (test is null) return NotFound("The test does not exist");
         
         test.Updated = DateTime.UtcNow;
         test.Description = request.Description;
-        test.Grade = request.Grade; 
-        
-        return new TestsResponse()
+        test.Grade = request.Grade;
+
+        return Ok(new TestsResponse
         {
             id = test.id,
             Description = test.Description,
             Grade = test.Grade
-        };
+        });
     }
 }
