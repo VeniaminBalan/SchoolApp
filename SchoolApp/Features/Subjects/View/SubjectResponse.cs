@@ -10,10 +10,7 @@ public class SubjectResponse
     public string id { get; set; }
     public string Name { get; set; }
     public string ProffesorMail { get; set; }
-    
     public IEnumerable<GradeResponse> Grades { get; set; }
-    
     public IEnumerable<AssignmentsResponseForSubject> Assignment { get; set; }
-    
     public IEnumerable<TestResponseForSubject> Tests { get; set; }
 }
